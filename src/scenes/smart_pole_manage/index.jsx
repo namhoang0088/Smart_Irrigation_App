@@ -19,6 +19,8 @@ import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
 import SubscriptionsIcon from "@mui/icons-material/Subscriptions";
 import { API_BASE_URL } from "../../data/link_api";
+import EventNoteIcon from '@mui/icons-material/EventNote';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 const SmartPoleManage = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -38,8 +40,8 @@ const SmartPoleManage = () => {
 
   //lựa chọn kênh live------------------------begin-----------------------------
   const channelOptions = [
-    { value: 1, label: "Kênh 1" },
-    { value: 2, label: "Kênh 2" },
+    { value: 1, label: "Khu vực 1" },
+    { value: 2, label: "Khu vực 2" },
   ];
   const [channel, setChannel] = React.useState(1);
   const handleChannelChange = (event) => {
@@ -335,31 +337,10 @@ const SmartPoleManage = () => {
       />
       <Box display="flex">
         <Header
-          title="Multi-channel Advertising Management"
-          subtitle="Welcome to Multi-channel Advertising Management"
+          title="LẬP LỊCH TƯỚI PHÂN BÓN"
+          subtitle="Chào mừng đến với Lập lịch tưới phân bón"
         />
-        <Box marginLeft="auto" width="300px">
-          <TextField
-            select
-            label="Kênh"
-            value={channel}
-            onChange={handleChannelChange}
-            variant="outlined"
-            fullWidth
-          >
-            {channelOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                <Box display="flex" alignItems="center">
-                  {" "}
-                  {/* Sử dụng Flexbox để căn chỉnh các phần tử ngang nhau */}
-                  <SubscriptionsIcon sx={{ marginRight: 1 }} />{" "}
-                  {/* Icon Subscriptions */}
-                  {option.label}
-                </Box>
-              </MenuItem>
-            ))}
-          </TextField>
-        </Box>
+
       </Box>
 
       <Box
@@ -377,7 +358,7 @@ const SmartPoleManage = () => {
           flexDirection="column"
         >
           <Box display="flex" alignItems="center">
-            <OndemandVideoIcon style={{ fontSize: "32px" }} />
+            <EventNoteIcon style={{ fontSize: "32px" }} />
             <h2
               style={{
                 marginLeft: "32px",
@@ -385,7 +366,7 @@ const SmartPoleManage = () => {
                 fontWeight: "bold",
               }}
             >
-              Danh sách quảng cáo
+              Danh sách lịch tưới
             </h2>
           </Box>
 
@@ -441,7 +422,7 @@ const SmartPoleManage = () => {
               endIcon={<AddBoxIcon />}
               onClick={handleOpenAddEvent}
             >
-              Thêm quảng cáo
+              Thêm lịch tưới
             </Button>
           </Box>
         </Box>

@@ -24,7 +24,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import CheckIcon from "@mui/icons-material/Check";
 import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
-
+import WaterIcon from '@mui/icons-material/Water';
 import CancelIcon from "@mui/icons-material/Cancel";
 import {
   DatePicker,
@@ -94,7 +94,7 @@ export default function CustomDialog({
   const handleClickFlex = () => {
     setOpenFlex(!openFlex);
   };
-
+  const hardcodedOptions = ["1", "2", "3"];
   const [videoname, setVideoname] = useState([]); // Khai báo biến dataVideo
   const [id, setId] = useState([]);
   const [label, setLabel] = useState([]); // Khai báo biến dataVideo
@@ -108,31 +108,24 @@ export default function CustomDialog({
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [dataVideo, setDataVideo] = useState([]);
 
+  const [area, setArea] = useState([]);
+  const [mixer, setMixer] = useState([]);
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          `${API_BASE_URL}/get/schedule?stream=${channelStream}`,
+          `${API_BASE_URL}/get/schedule`,
           {
             headers: {
               "ngrok-skip-browser-warning": "true",
             },
           },
         );
-        const responseVideo = await fetch(`${API_BASE_URL}/get/video`, {
-          headers: {
-            "ngrok-skip-browser-warning": "true",
-          },
-        });
 
         if (!response.ok) {
           throw new Error("Network response video was not ok");
         }
-        if (!responseVideo.ok) {
-          throw new Error("Network response video was not ok");
-        }
 
-        const dataVideo = await responseVideo.json();
         const responseData = await response.json();
         const id = responseData.Schedule.map((item) => item.ID);
         const label = responseData.Schedule.map((item) => item.label); // Lấy giá trị của trường "label"
@@ -144,6 +137,11 @@ export default function CustomDialog({
         const until = responseData.Schedule.map((item) => item.until);
         const typetask = responseData.Schedule.map((item) => item.typetask);
         const days = responseData.Schedule.map((item) => item.days);
+
+        const area = responseData.Schedule.map((item) => item.area);
+        const mixer = responseData.Schedule.map((item) => item.mixer);
+        console.log("Labelllllllllllllllllllllllllll:", area);
+        console.log("Labelllllllllllllllllllllllllll:", mixer);
         // console.log("Labelllllllllllllllllllllllllll:", label);
         //console.log("Videonamemmmmmmmmmmmmmmmmmmmmmm:", videoname);
         // console.log("Starttttttttttttttttttttttttttt:", start);
@@ -166,6 +164,9 @@ export default function CustomDialog({
         setUntil(until);
         setTypeTask(typetask);
         setDays(days);
+
+        setArea(area);
+        setMixer(mixer);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -196,6 +197,9 @@ export default function CustomDialog({
   const defaultType = indexes.map((index) => typetask[index]);
   const defaultDays = indexes.map((index) => days[index]);
   const defaultId = indexes.map((index) => id[index]);
+
+  const defaultArea = indexes.map((index) => area[index]);
+  const defaultMixer = indexes.map((index) => mixer[index]);
   const daysToIndex = {
     mon: 0,
     tue: 1,
@@ -1097,7 +1101,7 @@ export default function CustomDialog({
         console.error("Error:", error);
       }
     }
-    window.location.reload();
+    //window.location.reload();
     //api------onetime---------------------end-------------------------------------------
   };
 
@@ -1195,7 +1199,7 @@ export default function CustomDialog({
             <Box marginBottom="20px" display="flex" alignItems="center">
               <InfoIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
               <Typography variant="h4" marginRight="10px" paddingLeft="10px">
-                <strong>Tên quảng cáo</strong>
+                <strong>Tên lịch tưới</strong>
               </Typography>
               <TextField
                 label="Đổi tên quảng cáo"
@@ -1208,18 +1212,7 @@ export default function CustomDialog({
             {/* Dòng thứ hai: "Chọn video" và trường nhập dữ liệu --------------------------------------*/}
 
             {/* Dòng thứ ba -------------------------------------------------------------------*/}
-            <Box marginBottom="20px" display="flex" alignItems="center">
-              <OndemandVideoIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
-              <Typography variant="h4" marginRight="10px" paddingLeft="10px">
-                <strong>Nội dung</strong>
-              </Typography>
-              <ReactPlayer
-                url={[{ src: "", type: "video/mp4", quality: "1080" }]}
-                controls={true}
-                width="640px"
-                height="360px"
-              />
-            </Box>
+
 
             {/* Dòng thứ tư ----------------------------------------------------*/}
             <Box marginBottom="30px" display="flex" alignItems="center">
@@ -1291,7 +1284,35 @@ export default function CustomDialog({
                               borderRadius="10px"
                             >
                               <Box key={index} marginBottom="20px">
-                                <Box display="flex" alignItems="center">
+
+                              <Box
+            marginBottom="30px"
+            marginTop="20px"
+            display="flex"
+            alignItems="center"
+          >
+            <ChangeCircleIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Chọn khu vực</strong>
+            </Typography>
+            <Autocomplete
+              sx={{ width: 300 }}
+              multiple
+              defaultValue={defaultArea[index]}
+              onChange={(event, newValue) => {
+                setSelectedOptions(newValue);
+              }}
+              options={hardcodedOptions}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="outlined"
+                  label="Khu vực"
+                />
+              )}
+            />
+            </Box>
+                                <Box display="flex" alignItems="center" marginBottom="20px">
                                   <TimePicker
                                     label="Thời gian bắt đầu"
                                     defaultValue={dayjs(
@@ -1315,60 +1336,55 @@ export default function CustomDialog({
                                 </Box>
 
                                 <Box
-                                  marginBottom="30px"
-                                  marginTop="20px"
-                                  display="flex"
-                                  alignItems="center"
-                                >
-                                  <ChangeCircleIcon
-                                    sx={{ color: "#4cceac", fontSize: "36px" }}
-                                  />
-                                  <Typography
-                                    variant="h5"
-                                    marginRight="10px"
-                                    paddingLeft="10px"
-                                  >
-                                    <strong>Thay đổi nội dung</strong>
-                                  </Typography>
-                                  <Autocomplete
-                                    sx={{ width: 300 }}
-                                    multiple
-                                    id="list-pole-autocomplete"
-                                    defaultValue={defaultvideoname[index]}
-                                    onChange={(event, newValue) => {
-                                      setSelectedOptions(newValue);
-                                    }}
-                                    options={
-                                      dataVideo && dataVideo["Video name"]
-                                        ? dataVideo["Video name"]
-                                        : []
-                                    }
-                                    renderInput={(params) => (
-                                      <TextField
-                                        {...params}
-                                        variant="outlined"
-                                        label="Chọn nội dung"
-                                      />
-                                    )}
-                                  />
+            marginBottom="30px"
+            marginTop="20px"
+            display="flex"
+            alignItems="center"
+          >
+            <WaterIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Flow 1</strong>
+            </Typography>
+            <TextField
+              label="ml"
+              variant="outlined"
+              defaultValue={defaultMixer[index][0]}
+              sx={{ width: "60px"}}
+              onChange={(event) => {
+                // const newValue = event.target.value;
+                // onChangeDurationDaily(newValue, boxDailyIdCounter);
+              }}
+            />
 
-                                  <Button
-                                    variant="contained"
-                                    onClick={() =>
-                                      handleDeleteId(defaultId[index])
-                                    }
-                                    sx={{
-                                      backgroundColor: "#757575",
-                                      color: "#fff",
-                                      marginLeft: "20px",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      padding: "5px",
-                                    }}
-                                  >
-                                    <DeleteForeverIcon />
-                                  </Button>
-                                </Box>
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Flow 2</strong>
+            </Typography>
+            <TextField
+              label="ml"
+              variant="outlined"
+              defaultValue={defaultMixer[index][1]}
+              sx={{ width: "60px" }}
+              onChange={(event) => {
+                // const newValue = event.target.value;
+                // onChangeDurationDaily(newValue, boxDailyIdCounter);
+              }}
+            />
+
+            
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Flow 3</strong>
+            </Typography>
+            <TextField
+              label="ml"
+              variant="outlined"
+              defaultValue={defaultMixer[index][2]}
+              sx={{ width: "60px" }}
+              onChange={(event) => {
+                // const newValue = event.target.value;
+                // onChangeDurationDaily(newValue, boxDailyIdCounter);
+              }}
+            /> 
+          </Box>
 
                                 <Box
                                   marginBottom="20px"
@@ -1402,6 +1418,24 @@ export default function CustomDialog({
                                     label="Ngày kết thúc"
                                     defaultValue={dayjs(defaultUntil[index])}
                                   />
+
+<Button
+                                    variant="contained"
+                                    onClick={() =>
+                                      handleDeleteId(defaultId[index])
+                                    }
+                                    sx={{
+                                      backgroundColor: "#757575",
+                                      color: "#fff",
+                                      marginLeft: "20px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      padding: "5px",
+                                    }}
+                                  >
+                                    <DeleteForeverIcon />
+                                  </Button>
+
                                 </Box>
 
                                 <Box
@@ -1438,14 +1472,6 @@ export default function CustomDialog({
                       ))}
 
                       {/*nội dung trong collapse của lặp lại hằng ngày---------------end --------------*/}
-                      <Button
-                        onClick={handleAddDayBox}
-                        variant="outlined"
-                        sx={{ marginLeft: "200px" }}
-                        startIcon={<AddIcon />}
-                      >
-                        Thêm lịch chiếu
-                      </Button>
                     </List>
                   </Collapse>
                 </Box>
@@ -1493,7 +1519,35 @@ export default function CustomDialog({
                               borderRadius="10px"
                             >
                               <Box key={index} marginBottom="20px">
-                                <Box display="flex" alignItems="center">
+                              <Box
+            marginBottom="30px"
+            marginTop="20px"
+            display="flex"
+            alignItems="center"
+          >
+            <ChangeCircleIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Chọn khu vực</strong>
+            </Typography>
+            <Autocomplete
+              sx={{ width: 300 }}
+              multiple
+              defaultValue={defaultArea[index]}
+              onChange={(event, newValue) => {
+                setSelectedOptions(newValue);
+              }}
+              options={hardcodedOptions}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="outlined"
+                  label="Khu vực"
+                />
+              )}
+            />
+            </Box>
+
+                                <Box display="flex" alignItems="center" marginBottom= "20px">
                                   <TimePicker
                                     label="Thời gian bắt đầu"
                                     defaultValue={dayjs(
@@ -1514,47 +1568,9 @@ export default function CustomDialog({
                                       `2022-04-17T${defaultEnd[index]}`,
                                     )}
                                   />
-                                </Box>
 
-                                <Box
-                                  marginBottom="30px"
-                                  marginTop="20px"
-                                  display="flex"
-                                  alignItems="center"
-                                >
-                                  <ChangeCircleIcon
-                                    sx={{ color: "#4cceac", fontSize: "36px" }}
-                                  />
-                                  <Typography
-                                    variant="h5"
-                                    marginRight="10px"
-                                    paddingLeft="10px"
-                                  >
-                                    <strong>Thay đổi nội dung</strong>
-                                  </Typography>
-                                  <Autocomplete
-                                    sx={{ width: 300 }}
-                                    multiple
-                                    id="list-pole-autocomplete"
-                                    defaultValue={defaultvideoname[index]}
-                                    onChange={(event, newValue) => {
-                                      setSelectedOptions(newValue);
-                                    }}
-                                    options={
-                                      dataVideo && dataVideo["Video name"]
-                                        ? dataVideo["Video name"]
-                                        : []
-                                    }
-                                    renderInput={(params) => (
-                                      <TextField
-                                        {...params}
-                                        variant="outlined"
-                                        label="Chọn nội dung"
-                                      />
-                                    )}
-                                  />
-
-                                  <Button
+                                  
+<Button
                                     variant="contained"
                                     onClick={() =>
                                       handleDeleteId(defaultId[index])
@@ -1571,6 +1587,57 @@ export default function CustomDialog({
                                     <DeleteForeverIcon />
                                   </Button>
                                 </Box>
+
+                                <Box
+            marginBottom="30px"
+            marginTop="20px"
+            display="flex"
+            alignItems="center"
+          >
+            <WaterIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Flow 1</strong>
+            </Typography>
+            <TextField
+              label="ml"
+              variant="outlined"
+              defaultValue={defaultMixer[index][0]}
+              sx={{ width: "60px"}}
+              onChange={(event) => {
+                // const newValue = event.target.value;
+                // onChangeDurationDaily(newValue, boxDailyIdCounter);
+              }}
+            />
+
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Flow 2</strong>
+            </Typography>
+            <TextField
+              label="ml"
+              variant="outlined"
+              defaultValue={defaultMixer[index][1]}
+              sx={{ width: "60px" }}
+              onChange={(event) => {
+                // const newValue = event.target.value;
+                // onChangeDurationDaily(newValue, boxDailyIdCounter);
+              }}
+            />
+
+            
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Flow 3</strong>
+            </Typography>
+            <TextField
+              label="ml"
+              variant="outlined"
+              defaultValue={defaultMixer[index][2]}
+              sx={{ width: "60px" }}
+              onChange={(event) => {
+                // const newValue = event.target.value;
+                // onChangeDurationDaily(newValue, boxDailyIdCounter);
+              }}
+            /> 
+          </Box>
 
                                 <Box
                                   marginBottom="20px"
@@ -1640,14 +1707,6 @@ export default function CustomDialog({
                         <React.Fragment key={index}>{box}</React.Fragment>
                       ))}
 
-                      <Button
-                        onClick={handleAddWeekBox}
-                        variant="outlined"
-                        sx={{ marginLeft: "200px" }}
-                        startIcon={<AddIcon />}
-                      >
-                        Thêm lịch chiếu
-                      </Button>
                     </List>
                   </Collapse>
                 </Box>
@@ -1696,7 +1755,35 @@ export default function CustomDialog({
                               borderRadius="10px"
                             >
                               <Box key={index} marginBottom="20px">
-                                <Box display="flex" alignItems="center">
+                              <Box
+            marginBottom="30px"
+            marginTop="20px"
+            display="flex"
+            alignItems="center"
+          >
+            <ChangeCircleIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Chọn khu vực</strong>
+            </Typography>
+            <Autocomplete
+              sx={{ width: 300 }}
+              multiple
+              defaultValue={defaultArea[index]}
+              onChange={(event, newValue) => {
+                setSelectedOptions(newValue);
+              }}
+              options={hardcodedOptions}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="outlined"
+                  label="Khu vực"
+                />
+              )}
+            />
+            </Box>
+
+                                <Box display="flex" alignItems="center" marginBottom="20px">
                                   <TimePicker
                                     label="Thời gian bắt đầu"
                                     defaultValue={dayjs(
@@ -1717,45 +1804,6 @@ export default function CustomDialog({
                                       `2022-04-17T${defaultEnd[index]}`,
                                     )}
                                   />
-                                </Box>
-
-                                <Box
-                                  marginBottom="30px"
-                                  marginTop="20px"
-                                  display="flex"
-                                  alignItems="center"
-                                >
-                                  <ChangeCircleIcon
-                                    sx={{ color: "#4cceac", fontSize: "36px" }}
-                                  />
-                                  <Typography
-                                    variant="h5"
-                                    marginRight="10px"
-                                    paddingLeft="10px"
-                                  >
-                                    <strong>Thay đổi nội dung</strong>
-                                  </Typography>
-                                  <Autocomplete
-                                    sx={{ width: 300 }}
-                                    multiple
-                                    id="list-pole-autocomplete"
-                                    defaultValue={defaultvideoname[index]}
-                                    onChange={(event, newValue) => {
-                                      setSelectedOptions(newValue);
-                                    }}
-                                    options={
-                                      dataVideo && dataVideo["Video name"]
-                                        ? dataVideo["Video name"]
-                                        : []
-                                    }
-                                    renderInput={(params) => (
-                                      <TextField
-                                        {...params}
-                                        variant="outlined"
-                                        label="Chọn nội dung"
-                                      />
-                                    )}
-                                  />
 
                                   <Button
                                     variant="contained"
@@ -1774,6 +1822,59 @@ export default function CustomDialog({
                                     <DeleteForeverIcon />
                                   </Button>
                                 </Box>
+
+
+                                <Box
+            marginBottom="30px"
+            marginTop="20px"
+            display="flex"
+            alignItems="center"
+          >
+            <WaterIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Flow 1</strong>
+            </Typography>
+            <TextField
+              label="ml"
+              variant="outlined"
+              defaultValue={defaultMixer[index][0]}
+              sx={{ width: "60px"}}
+              onChange={(event) => {
+                // const newValue = event.target.value;
+                // onChangeDurationDaily(newValue, boxDailyIdCounter);
+              }}
+            />
+
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Flow 2</strong>
+            </Typography>
+            <TextField
+              label="ml"
+              variant="outlined"
+              defaultValue={defaultMixer[index][1]}
+              sx={{ width: "60px" }}
+              onChange={(event) => {
+                // const newValue = event.target.value;
+                // onChangeDurationDaily(newValue, boxDailyIdCounter);
+              }}
+            />
+
+            
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Flow 3</strong>
+            </Typography>
+            <TextField
+              label="ml"
+              variant="outlined"
+              defaultValue={defaultMixer[index][2]}
+              sx={{ width: "60px" }}
+              onChange={(event) => {
+                // const newValue = event.target.value;
+                // onChangeDurationDaily(newValue, boxDailyIdCounter);
+              }}
+            /> 
+          </Box>
+
 
                                 <Box
                                   marginBottom="20px"
@@ -1805,14 +1906,6 @@ export default function CustomDialog({
                         <React.Fragment key={index}>{box}</React.Fragment>
                       ))}
 
-                      <Button
-                        onClick={handleAddOneTimeBox}
-                        variant="outlined"
-                        sx={{ marginLeft: "200px" }}
-                        startIcon={<AddIcon />}
-                      >
-                        Thêm lịch chiếu
-                      </Button>
                     </List>
                   </Collapse>
                 </Box>

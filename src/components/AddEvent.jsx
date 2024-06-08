@@ -24,7 +24,6 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import CheckIcon from "@mui/icons-material/Check";
 import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
-
 import CancelIcon from "@mui/icons-material/Cancel";
 import {
   DatePicker,
@@ -58,6 +57,9 @@ import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import { API_BASE_URL } from "../data/link_api";
+import ErrorPopup from "./ErrorPopup";
+import SuccessPopup from "./SuccessPopup";
+import WaterIcon from '@mui/icons-material/Water';
 export default function AddEvent({ open, handleClose, channelStream }) {
   // console.log("adđ event channel stream", channelStream)
   const theme = useTheme();
@@ -98,6 +100,9 @@ export default function AddEvent({ open, handleClose, channelStream }) {
   const [timeBeginDailyArray, setTimeBeginDailyArray] = useState([]);
   const [timeUntilDailyArray, setTimeUntilDailyArray] = useState([]);
   const [durationDailyArray, setDurationDailyArray] = useState([]);
+  const [flow1DailyArray, setFlow1DailyArray] = useState([]);
+  const [flow2DailyArray, setFlow2DailyArray] = useState([]);
+  const [flow3DailyArray, setFlow3DailyArray] = useState([]);
 
   const [timeStartWeeklyArray, setTimeStartWeeklyArray] = useState([]);
   const [timeEndWeeklyArray, setTimeEndWeeklyArray] = useState([]);
@@ -105,13 +110,21 @@ export default function AddEvent({ open, handleClose, channelStream }) {
   const [listDayWeeklyArray, setListDayWeeklyArray] = useState([]);
   const [timeBeginWeeklyArray, setTimeBeginWeeklyArray] = useState([]);
   const [timeUntilWeeklyArray, setTimeUntilWeeklyArray] = useState([]);
+  const [flow1WeeklyArray, setFlow1WeeklyArray] = useState([]);
+  const [flow2WeeklyArray, setFlow2WeeklyArray] = useState([]);
+  const [flow3WeeklyArray, setFlow3WeeklyArray] = useState([]);
 
   const [timeStartOneTimeArray, setTimeStartOneTimeArray] = useState([]);
   const [timeEndOneTimeArray, setTimeEndOneTimeArray] = useState([]);
   const [contentOneTimeArray, setContentOneTimeArray] = useState([]);
   const [timeBeginOneTimeArray, setTimeBeginOneTimeArray] = useState([]);
+  const [flow1OneTimeArray, setFlow1OneTimeArray] = useState([]);
+  const [flow2OneTimeArray, setFlow2OneTimeArray] = useState([]);
+  const [flow3OneTimeArray, setFlow3OneTimeArray] = useState([]);
 
   //thêm lịch chiếu-----Daily----------------begin-------------------------------
+  const hardcodedOptions = ["1", "2", "3"];
+
   const [dayBoxes, setDayBoxes] = useState([]);
   const [boxDailyIdCounter, setBoxDailyIdCounter] = useState(0);
   const handleAddDayBox = () => {
@@ -129,6 +142,35 @@ export default function AddEvent({ open, handleClose, channelStream }) {
         borderRadius="10px"
       >
         <Box marginBottom="20px">
+        <Box
+            marginBottom="30px"
+            marginTop="20px"
+            display="flex"
+            alignItems="center"
+          >
+            <ChangeCircleIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Chọn khu vực</strong>
+            </Typography>
+            <Autocomplete
+              sx={{ width: 300 }}
+              multiple
+              id="list-pole-autocomplete"
+              onChange={(event, newValue) => {
+                setSelectedOptions(newValue);
+                onChangeContentDaily(newValue, boxDailyIdCounter.toString());
+              }}
+              options={hardcodedOptions}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="outlined"
+                  label="Khu vực"
+                />
+              )}
+            />
+            </Box>
+
           <Box display="flex" alignItems="center">
             <TimePicker
               label="Thời gian bắt đầu"
@@ -178,31 +220,46 @@ export default function AddEvent({ open, handleClose, channelStream }) {
             display="flex"
             alignItems="center"
           >
-            <ChangeCircleIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
+            <WaterIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
             <Typography variant="h5" marginRight="10px" paddingLeft="10px">
-              <strong>Thay đổi nội dung</strong>
+              <strong>Flow 1</strong>
             </Typography>
-            <Autocomplete
-              sx={{ width: 300 }}
-              multiple
-              id="list-pole-autocomplete"
-              onChange={(event, newValue) => {
-                setSelectedOptions(newValue);
-                onChangeContentDaily(newValue, boxDailyIdCounter.toString());
+            <TextField
+              label="ml"
+              variant="outlined"
+              sx={{ width: "60px"}}
+              onChange={(event) => {
+                const newValue = event.target.value;
+                onChangeFlow1Daily(newValue, boxDailyIdCounter);
               }}
-              options={
-                dataVideo && dataVideo["Video name"]
-                  ? dataVideo["Video name"]
-                  : []
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="outlined"
-                  label="Chọn nội dung"
-                />
-              )}
             />
+
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Flow 2</strong>
+            </Typography>
+            <TextField
+              label="ml"
+              variant="outlined"
+              sx={{ width: "60px" }}
+              onChange={(event) => {
+                const newValue = event.target.value;
+                onChangeFlow2Daily(newValue, boxDailyIdCounter);
+              }}
+            />
+
+            
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Flow 3</strong>
+            </Typography>
+            <TextField
+              label="ml"
+              variant="outlined"
+              sx={{ width: "60px" }}
+              onChange={(event) => {
+                const newValue = event.target.value;
+                onChangeFlow3Daily(newValue, boxDailyIdCounter);
+              }}
+            /> 
 
             <Button
               variant="contained"
@@ -300,6 +357,36 @@ export default function AddEvent({ open, handleClose, channelStream }) {
         borderRadius="10px"
       >
         <Box marginBottom="20px">
+
+        <Box
+            marginBottom="30px"
+            marginTop="20px"
+            display="flex"
+            alignItems="center"
+          >
+            <ChangeCircleIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Chọn khu vực</strong>
+            </Typography>
+            <Autocomplete
+              sx={{ width: 300 }}
+              multiple
+              id="list-pole-autocomplete"
+              onChange={(event, newValue) => {
+                setSelectedOptions(newValue);
+                onChangeContentWeekly(newValue, boxWeeklyIdCounter.toString());
+              }}
+              options={hardcodedOptions}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="outlined"
+                  label="Chọn nội dung"
+                />
+              )}
+            />
+            </Box>
+
           <Box display="flex" alignItems="center">
             <TimePicker
               label="Thời gian bắt đầu"
@@ -349,31 +436,46 @@ export default function AddEvent({ open, handleClose, channelStream }) {
             display="flex"
             alignItems="center"
           >
-            <ChangeCircleIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
+            <WaterIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
             <Typography variant="h5" marginRight="10px" paddingLeft="10px">
-              <strong>Thay đổi nội dung</strong>
+              <strong>Flow 1</strong>
             </Typography>
-            <Autocomplete
-              sx={{ width: 300 }}
-              multiple
-              id="list-pole-autocomplete"
-              onChange={(event, newValue) => {
-                setSelectedOptions(newValue);
-                onChangeContentWeekly(newValue, boxWeeklyIdCounter.toString());
+            <TextField
+              label="ml"
+              variant="outlined"
+              sx={{ width: "60px"}}
+              onChange={(event) => {
+                const newValue = event.target.value;
+                onChangeFlow1Weekly(newValue, boxDailyIdCounter);
               }}
-              options={
-                dataVideo && dataVideo["Video name"]
-                  ? dataVideo["Video name"]
-                  : []
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="outlined"
-                  label="Chọn nội dung"
-                />
-              )}
             />
+
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Flow 2</strong>
+            </Typography>
+            <TextField
+              label="ml"
+              variant="outlined"
+              sx={{ width: "60px" }}
+              onChange={(event) => {
+                 const newValue = event.target.value;
+                 onChangeFlow2Weekly(newValue, boxDailyIdCounter);
+              }}
+            />
+
+            
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Flow 3</strong>
+            </Typography>
+            <TextField
+              label="ml"
+              variant="outlined"
+              sx={{ width: "60px" }}
+              onChange={(event) => {
+                const newValue = event.target.value;
+                onChangeFlow3Weekly(newValue, boxDailyIdCounter);
+              }}
+            /> 
 
             <Button
               variant="contained"
@@ -468,6 +570,35 @@ export default function AddEvent({ open, handleClose, channelStream }) {
         borderRadius="10px"
       >
         <Box marginBottom="20px">
+        <Box
+            marginBottom="30px"
+            marginTop="20px"
+            display="flex"
+            alignItems="center"
+          >
+            <ChangeCircleIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Chọn khu vực</strong>
+            </Typography>
+            <Autocomplete
+              sx={{ width: 300 }}
+              multiple
+              id="list-pole-autocomplete"
+              onChange={(event, newValue) => {
+                setSelectedOptions(newValue);
+                onChangeContentOneTime(newValue, boxOneTimeIdCounter.toString());
+              }}
+              options={hardcodedOptions}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="outlined"
+                  label="Chọn nội dung"
+                />
+              )}
+            />
+            </Box>
+
           <Box display="flex" alignItems="center">
             <TimePicker
               label="Thời gian bắt đầu"
@@ -517,34 +648,46 @@ export default function AddEvent({ open, handleClose, channelStream }) {
             display="flex"
             alignItems="center"
           >
-            <ChangeCircleIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
+            <WaterIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
             <Typography variant="h5" marginRight="10px" paddingLeft="10px">
-              <strong>Thay đổi nội dung</strong>
+              <strong>Flow 1</strong>
             </Typography>
-            <Autocomplete
-              sx={{ width: 300 }}
-              multiple
-              id="list-pole-autocomplete"
-              onChange={(event, newValue) => {
-                setSelectedOptions(newValue);
-                onChangeContentOneTime(
-                  newValue,
-                  boxOneTimeIdCounter.toString(),
-                );
+            <TextField
+              label="ml"
+              variant="outlined"
+              sx={{ width: "60px"}}
+              onChange={(event) => {
+                const newValue = event.target.value;
+                onChangeFlow1Onetime(newValue, boxDailyIdCounter);
               }}
-              options={
-                dataVideo && dataVideo["Video name"]
-                  ? dataVideo["Video name"]
-                  : []
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="outlined"
-                  label="Chọn nội dung"
-                />
-              )}
             />
+
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Flow 2</strong>
+            </Typography>
+            <TextField
+              label="ml"
+              variant="outlined"
+              sx={{ width: "60px" }}
+              onChange={(event) => {
+                const newValue = event.target.value;
+                onChangeFlow2Onetime(newValue, boxDailyIdCounter);
+              }}
+            />
+
+            
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Flow 3</strong>
+            </Typography>
+            <TextField
+              label="ml"
+              variant="outlined"
+              sx={{ width: "60px" }}
+              onChange={(event) => {
+                const newValue = event.target.value;
+                onChangeFlow3Onetime(newValue, boxDailyIdCounter);
+              }}
+            /> 
 
             <Button
               variant="contained"
@@ -713,6 +856,152 @@ export default function AddEvent({ open, handleClose, channelStream }) {
       }
     });
   };
+
+  const onChangeFlow1Daily = (newValue, boxDailyIdCounter) => {
+    const label = `dailyFlow1-${boxDailyIdCounter}`;
+    setFlow1DailyArray((prevArray) => {
+      const index = prevArray.findIndex((item) => item.label === label);
+      if (index !== -1) {
+        // Nếu nhãn đã tồn tại, cập nhật giá trị
+        return prevArray.map((item, idx) =>
+          idx === index ? { ...item, value: newValue } : item,
+        );
+      } else {
+        // Nếu nhãn không tồn tại, thêm một mục mới
+        return [...prevArray, { label: label, value: newValue }];
+      }
+    });
+  };
+
+  const onChangeFlow2Daily = (newValue, boxDailyIdCounter) => {
+    const label = `dailyFlow2-${boxDailyIdCounter}`;
+    setFlow2DailyArray((prevArray) => {
+      const index = prevArray.findIndex((item) => item.label === label);
+      if (index !== -1) {
+        // Nếu nhãn đã tồn tại, cập nhật giá trị
+        return prevArray.map((item, idx) =>
+          idx === index ? { ...item, value: newValue } : item,
+        );
+      } else {
+        // Nếu nhãn không tồn tại, thêm một mục mới
+        return [...prevArray, { label: label, value: newValue }];
+      }
+    });
+  };
+
+  const onChangeFlow3Daily = (newValue, boxDailyIdCounter) => {
+    const label = `dailyFlow3-${boxDailyIdCounter}`;
+    setFlow3DailyArray((prevArray) => {
+      const index = prevArray.findIndex((item) => item.label === label);
+      if (index !== -1) {
+        // Nếu nhãn đã tồn tại, cập nhật giá trị
+        return prevArray.map((item, idx) =>
+          idx === index ? { ...item, value: newValue } : item,
+        );
+      } else {
+        // Nếu nhãn không tồn tại, thêm một mục mới
+        return [...prevArray, { label: label, value: newValue }];
+      }
+    });
+  };
+
+  const onChangeFlow1Weekly = (newValue, boxDailyIdCounter) => {
+    const label = `weeklyFlow1-${boxDailyIdCounter}`;
+    setFlow1WeeklyArray((prevArray) => {
+      const index = prevArray.findIndex((item) => item.label === label);
+      if (index !== -1) {
+        // Nếu nhãn đã tồn tại, cập nhật giá trị
+        return prevArray.map((item, idx) =>
+          idx === index ? { ...item, value: newValue } : item,
+        );
+      } else {
+        // Nếu nhãn không tồn tại, thêm một mục mới
+        return [...prevArray, { label: label, value: newValue }];
+      }
+    });
+  };
+
+  const onChangeFlow2Weekly = (newValue, boxDailyIdCounter) => {
+    const label = `weekyFlow2-${boxDailyIdCounter}`;
+    setFlow2WeeklyArray((prevArray) => {
+      const index = prevArray.findIndex((item) => item.label === label);
+      if (index !== -1) {
+        // Nếu nhãn đã tồn tại, cập nhật giá trị
+        return prevArray.map((item, idx) =>
+          idx === index ? { ...item, value: newValue } : item,
+        );
+      } else {
+        // Nếu nhãn không tồn tại, thêm một mục mới
+        return [...prevArray, { label: label, value: newValue }];
+      }
+    });
+  };
+
+  const onChangeFlow3Weekly = (newValue, boxDailyIdCounter) => {
+    const label = `weekyFlow3-${boxDailyIdCounter}`;
+    setFlow3WeeklyArray((prevArray) => {
+      const index = prevArray.findIndex((item) => item.label === label);
+      if (index !== -1) {
+        // Nếu nhãn đã tồn tại, cập nhật giá trị
+        return prevArray.map((item, idx) =>
+          idx === index ? { ...item, value: newValue } : item,
+        );
+      } else {
+        // Nếu nhãn không tồn tại, thêm một mục mới
+        return [...prevArray, { label: label, value: newValue }];
+      }
+    });
+  };
+
+  const onChangeFlow1Onetime = (newValue, boxDailyIdCounter) => {
+    const label = `onetimeFlow1-${boxDailyIdCounter}`;
+    setFlow1OneTimeArray((prevArray) => {
+      const index = prevArray.findIndex((item) => item.label === label);
+      if (index !== -1) {
+        // Nếu nhãn đã tồn tại, cập nhật giá trị
+        return prevArray.map((item, idx) =>
+          idx === index ? { ...item, value: newValue } : item,
+        );
+      } else {
+        // Nếu nhãn không tồn tại, thêm một mục mới
+        return [...prevArray, { label: label, value: newValue }];
+      }
+    });
+  };
+
+  const onChangeFlow2Onetime= (newValue, boxDailyIdCounter) => {
+    const label = `onetimeFlow2-${boxDailyIdCounter}`;
+    setFlow2OneTimeArray((prevArray) => {
+      const index = prevArray.findIndex((item) => item.label === label);
+      if (index !== -1) {
+        // Nếu nhãn đã tồn tại, cập nhật giá trị
+        return prevArray.map((item, idx) =>
+          idx === index ? { ...item, value: newValue } : item,
+        );
+      } else {
+        // Nếu nhãn không tồn tại, thêm một mục mới
+        return [...prevArray, { label: label, value: newValue }];
+      }
+    });
+  };
+
+  const onChangeFlow3Onetime = (newValue, boxDailyIdCounter) => {
+    const label = `onetimeFlow3-${boxDailyIdCounter}`;
+    setFlow3OneTimeArray((prevArray) => {
+      const index = prevArray.findIndex((item) => item.label === label);
+      if (index !== -1) {
+        // Nếu nhãn đã tồn tại, cập nhật giá trị
+        return prevArray.map((item, idx) =>
+          idx === index ? { ...item, value: newValue } : item,
+        );
+      } else {
+        // Nếu nhãn không tồn tại, thêm một mục mới
+        return [...prevArray, { label: label, value: newValue }];
+      }
+    });
+  };
+
+
   //daily-----------------------------------------end-------------------------------------------
   //weekly-----------------------------------------begin-------------------------------------------
 
@@ -882,7 +1171,8 @@ export default function AddEvent({ open, handleClose, channelStream }) {
     });
   };
   //onetime----------------------------------------------end-----------------------------------
-
+  // biến để check có error nào hay không
+  const [successsubmit, setSuccesssubmit] = useState(true);
   const handleSubmit = async () => {
     //api------daily---------------------begin-------------------------------------------
     for (let i = 0; i < timeStartDailyArray.length; i++) {
@@ -892,14 +1182,16 @@ export default function AddEvent({ open, handleClose, channelStream }) {
       const duration = durationDailyArray[i].value; // Độ dài
       const startDateParts = timeBeginDailyArray[i].value.split("/"); // Tách ngày, tháng và năm
       const startDate = `${startDateParts[2]}-${startDateParts[0]}-${startDateParts[1]}`; // Định dạng lại theo yyyy-mm-dd
-
+      const flow1 = flow1DailyArray[i].value
+      const flow2 = flow2DailyArray[i].value
+      const flow3 = flow3DailyArray[i].value
       const untilParts = timeUntilDailyArray[i].value.split("/"); // Tách ngày, tháng và năm
       const until = `${untilParts[2]}-${untilParts[0]}-${untilParts[1]}`; // Định dạng lại theo yyyy-mm-dd
       const label = labelOfScheduler; // Nhãn
 
       // Tạo đường dẫn API
-      const url = `${API_BASE_URL}//schedule/addTask/daily?stream=${channelStream}&list=${list}&duration=${duration}&starttime=${startTime}&endtime=${endTime}&startdate=${startDate}&until=${until}&label=${label}`;
-      console.log(url);
+      const url = `${API_BASE_URL}//schedule/addTask/daily?area=${list}&duration=${duration}&starttime=${startTime}&endtime=${endTime}&startdate=${startDate}&until=${until}&label=${label}&mixer0=${flow1}&mixer1=${flow2}&mixer2=${flow3}`;
+      //console.log(url);
       // Gửi yêu cầu API
       try {
         const response = await fetch(url, {
@@ -910,11 +1202,14 @@ export default function AddEvent({ open, handleClose, channelStream }) {
           },
           // body: JSON.stringify(payload) // Nếu cần gửi dữ liệu cụ thể, hãy thêm vào đây
         });
-
         if (!response.ok) {
-          throw new Error("Network response was not ok");
+          // const errorData = await response.json(); // Nhận dữ liệu lỗi dưới dạng JSON
+          // setErrorMessage(errorData.error);
+          // setSuccesssubmit(false);
+          // setOpenpopup(true);
+          // console.error("Errorrrrrrrrrrrrrrrrrrrrrr:", errorData.error); // Log dữ liệu lỗi
+          // Xử lý lỗi ở đây (nếu cần)
         }
-
         const data = await response.json();
         console.log("Response data:", data);
       } catch (error) {
@@ -938,9 +1233,13 @@ export default function AddEvent({ open, handleClose, channelStream }) {
 
       const daypick = listDayWeeklyArray[i].value.join(",");
 
+      const flow1 = flow1WeeklyArray[i].value
+      const flow2 = flow2WeeklyArray[i].value
+      const flow3 = flow3WeeklyArray[i].value
+
       // Tạo đường dẫn API
-      const url = `${API_BASE_URL}//schedule/addTask/weekly?stream=${channelStream}&list=${list}&starttime=${startTime}&endtime=${endTime}&startdate=${startDate}&until=${until}&label=${label}&days=${daypick}`;
-      console.log(url);
+      const url = `${API_BASE_URL}//schedule/addTask/weekly?area=${list}&starttime=${startTime}&endtime=${endTime}&startdate=${startDate}&until=${until}&label=${label}&days=${daypick}&mixer0=${flow1}&mixer1=${flow2}&mixer2=${flow3}`;
+      //console.log(url);
       //Gửi yêu cầu API
       try {
         const response = await fetch(url, {
@@ -953,7 +1252,10 @@ export default function AddEvent({ open, handleClose, channelStream }) {
         });
 
         if (!response.ok) {
-          throw new Error("Network response was not ok");
+          // const errorData = await response.json(); // Nhận dữ liệu lỗi dưới dạng JSON
+          // setErrorMessage(errorData.error);
+          // setSuccesssubmit(false);
+          // setOpenpopup(true);
         }
 
         const data = await response.json();
@@ -974,10 +1276,13 @@ export default function AddEvent({ open, handleClose, channelStream }) {
       const startDate = `${startDateParts[2]}-${startDateParts[0]}-${startDateParts[1]}`; // Định dạng lại theo yyyy-mm-dd
 
       const label = labelOfScheduler; // Nhãn
+      const flow1 = flow1OneTimeArray[i].value
+      const flow2 = flow2OneTimeArray[i].value
+      const flow3 = flow3OneTimeArray[i].value
 
       // Tạo đường dẫn API
-      const url = `${API_BASE_URL}//schedule/addTask/onetime?stream=${channelStream}&list=${list}&starttime=${startTime}&endtime=${endTime}&startdate=${startDate}&label=${label}`;
-      console.log(url);
+      const url = `${API_BASE_URL}//schedule/addTask/onetime?area=${list}&starttime=${startTime}&endtime=${endTime}&startdate=${startDate}&label=${label}&mixer0=${flow1}&mixer1=${flow2}&mixer2=${flow3}`;
+      //console.log(url);
       //Gửi yêu cầu API
       try {
         const response = await fetch(url, {
@@ -990,7 +1295,10 @@ export default function AddEvent({ open, handleClose, channelStream }) {
         });
 
         if (!response.ok) {
-          throw new Error("Network response was not ok");
+          // const errorData = await response.json(); // Nhận dữ liệu lỗi dưới dạng JSON
+          // setErrorMessage(errorData.error);
+          // setSuccesssubmit(false);
+          // setOpenpopup(true);
         }
 
         const data = await response.json();
@@ -1000,22 +1308,54 @@ export default function AddEvent({ open, handleClose, channelStream }) {
       }
     }
     //api------onetime---------------------end-------------------------------------------
-    window.location.reload();
+    //window.location.reload();
   };
 
   const handleSave = async () => {
     try {
+      setSuccesssubmit(true);
       await handleSubmit(); // Gọi hàm để xử lý việc gửi API
-      console.log("API requests sent successfully");
-      // Thêm logic xử lý sau khi gửi API thành công nếu cần
+      setSuccesssubmit((prevSuccess) => {
+        if (prevSuccess) {
+          setOpenpopupsuccess(1);
+          // Thực hiện các hành động khác sau khi tất cả các yêu cầu API hoàn thành
+                  setTimeout(() => {
+         window.location.reload();
+        }, 2000);
+        }
+        return prevSuccess;
+      });
+      
     } catch (error) {
       console.error("Error while sending API requests:", error);
       // Thêm logic xử lý khi gặp lỗi khi gửi API nếu cần
     }
-    handleClose();
   };
   //gửi dữ liệu lập lịch------------------------------------end--------------------------
 
+  //hiện popup lỗi-----------------------------------begin---------------------------------
+  const [openpopup, setOpenpopup] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleClickOpenpopup = () => {
+    setOpenpopup(true);
+  };
+
+  const handleClosepopup = () => {
+    setOpenpopup(false);
+  };
+  //hiện popup lỗi -----------------------------------------end------------------------------
+  //hiện popup thành công---------------------------------begin------------------------------
+  const [openpopupsuccess, setOpenpopupsuccess] = useState(false);
+
+  const handleClickOpenpopupsuccess = () => {
+    setOpenpopupsuccess(true);
+  };
+
+  const handleClosepopupsuccess = () => {
+    setOpenpopupsuccess(false);
+  };
+  //hiện popup thành công---------------------------------end--------------------------------
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Dialog
@@ -1023,11 +1363,12 @@ export default function AddEvent({ open, handleClose, channelStream }) {
         open={open}
         PaperProps={{ sx: { width: "60%", maxWidth: "100%" } }}
       >
+    
         <DialogTitle
           id="customized-dialog-title"
           sx={{ fontSize: "24px", fontWeight: "bold" }}
         >
-          Thêm quảng cáo
+          Thêm lịch tưới
         </DialogTitle>
         <DialogContent dividers>
           <Box
@@ -1043,10 +1384,10 @@ export default function AddEvent({ open, handleClose, channelStream }) {
             <Box marginBottom="20px" display="flex" alignItems="center">
               <InfoIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
               <Typography variant="h4" marginRight="10px" paddingLeft="10px">
-                <strong>Tên quảng cáo</strong>
+                <strong>Tên lịch tưới</strong>
               </Typography>
               <TextField
-                label="Đổi tên quảng cáo"
+                label="Đổi tên lịch tưới"
                 variant="outlined"
                 onChange={(event) => {
                   const newValue = event.target.value;
@@ -1071,7 +1412,7 @@ export default function AddEvent({ open, handleClose, channelStream }) {
             <Box marginBottom="20px" display="flex" alignItems="center">
               <AccessTimeIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
               <Typography variant="h4" marginRight="10px" paddingLeft="10px">
-                <strong>Lịch chiếu</strong>
+                <strong>Lịch tưới</strong>
               </Typography>
 
               {/* Box con--------------begin---------------------*/}
@@ -1128,7 +1469,7 @@ export default function AddEvent({ open, handleClose, channelStream }) {
                         sx={{ marginLeft: "200px" }}
                         startIcon={<AddIcon />}
                       >
-                        Thêm lịch chiếu
+                        Thêm lịch tưới
                       </Button>
                     </List>
                   </Collapse>
@@ -1174,7 +1515,7 @@ export default function AddEvent({ open, handleClose, channelStream }) {
                         sx={{ marginLeft: "200px" }}
                         startIcon={<AddIcon />}
                       >
-                        Thêm lịch chiếu
+                        Thêm lịch tưới
                       </Button>
                     </List>
                   </Collapse>
@@ -1220,7 +1561,7 @@ export default function AddEvent({ open, handleClose, channelStream }) {
                         sx={{ marginLeft: "200px" }}
                         startIcon={<AddIcon />}
                       >
-                        Thêm lịch chiếu
+                        Thêm lịch tưới
                       </Button>
                     </List>
                   </Collapse>
@@ -1278,6 +1619,8 @@ export default function AddEvent({ open, handleClose, channelStream }) {
           </Button>
         </DialogActions>
       </Dialog>
+      <ErrorPopup open={openpopup} handleClose={handleClosepopup} errorMessage={errorMessage} />
+      <SuccessPopup open={openpopupsuccess} handleClose={handleClosepopupsuccess}/>
     </LocalizationProvider>
   );
 }

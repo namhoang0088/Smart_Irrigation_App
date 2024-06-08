@@ -8,595 +8,531 @@ import {
   List,
   Button,
   Checkbox,
+  TextField,
+  Autocomplete,
+  TimePicker,
 } from "@mui/material";
+import InfoIcon from "@mui/icons-material/Info";
 import Header from "../../components/Header";
-import OndemandVideoIcon from "@mui/icons-material/OndemandVideo";
 import { useTheme } from "@mui/material/styles";
 import { tokens } from "../../theme";
-import SettingsIcon from "@mui/icons-material/Settings";
-import ExpandLess from "@mui/icons-material/ExpandLess";
-import ExpandMore from "@mui/icons-material/ExpandMore";
-import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
-import AddIcon from "@mui/icons-material/Add";
-import MicIcon from "@mui/icons-material/Mic";
-import MicOffIcon from "@mui/icons-material/MicOff";
-import VideocamIcon from "@mui/icons-material/Videocam";
-import VideocamOffIcon from "@mui/icons-material/VideocamOff";
-import PhoneDisabledIcon from "@mui/icons-material/PhoneDisabled";
-import TextField from "@mui/material/TextField";
-import MenuItem from "@mui/material/MenuItem";
-import SubscriptionsIcon from "@mui/icons-material/Subscriptions";
-import SettingsInputAntennaIcon from "@mui/icons-material/SettingsInputAntenna";
-import AddLinkIcon from '@mui/icons-material/AddLink';
 import { API_BASE_URL } from "../../data/link_api";
-import DvrIcon from '@mui/icons-material/Dvr';
-
+import LiquidGauge from "../../components/LiquidGauge";
+import DoNotDisturbOnIcon from '@mui/icons-material/DoNotDisturbOn';
+import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
+import Filter1Icon from '@mui/icons-material/Filter1';
+import Filter2Icon from '@mui/icons-material/Filter2';
+import Filter3Icon from '@mui/icons-material/Filter3';
+import Filter4Icon from '@mui/icons-material/Filter4';
+import EventNoteIcon from '@mui/icons-material/EventNote';
+import ChangeCircleIcon from "@mui/icons-material/ChangeCircle";
+import WaterIcon from '@mui/icons-material/Water';
+import AccessTimeFilledIcon from '@mui/icons-material/AccessTimeFilled';
+import ThermostatIcon from '@mui/icons-material/Thermostat';
+import PercentIcon from '@mui/icons-material/Percent';
+import mqtt from 'mqtt';
 const LiveAd = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const [openListPole, setOpenListPole] = useState(true);
-  const [isMicOn, setIsMicOn] = useState(false); // Trạng thái của mic, mặc định là tắt
-  const [isCameraOn, setIsCameraOn] = useState(false); // Trạng thái của camera, mặc định là tắt
-  const [micStream, setMicStream] = useState(null); // Lưu trữ stream từ microphone
-  const [cameraStream, setCameraStream] = useState(null); // Lưu trữ stream từ camera
+  const hardcodedOptions = ["1", "2", "3"];
+  let time  = new Date().toLocaleTimeString()
 
-  const handleClickListPole = () => {
-    setOpenListPole(!openListPole);
-  };
+  const [ctime,setTime] = useState(time)
+  const UpdateTime=()=>{
+    time =  new Date().toLocaleTimeString()
+    setTime(time)
+  }
+  setInterval(UpdateTime)
 
-  const handleMicToggle = () => {
-    setIsMicOn(!isMicOn); // Đảo ngược trạng thái mic
+  const [flow1, setFlow1] = useState(0);
+  const [flow2, setFlow2] = useState(0);
+  const [flow3, setFlow3] = useState(0);
+  const [pump, setPump] = useState(0);
 
-    if (!isMicOn) {
-      navigator.mediaDevices
-        .getUserMedia({ audio: true })
-        .then((stream) => {
-          setMicStream(stream);
-        })
-        .catch((error) => {
-          console.error("Lỗi khi truy cập microphone:", error);
-        });
-    } else {
-      // Tắt microphone
-      micStream.getAudioTracks().forEach((track) => track.stop());
-      setMicStream(null);
-    }
-  };
+  const [currentTask, setCurrentTask] = useState("");
+  const [mixer1Percent, setMixer1Percent] = useState(0);
+  const [mixer2Percent, setMixer2Percent] = useState(0);
+  const [mixer3Percent, setMixer3Percent] = useState(0);
+  const [pumpout, setPumpout] = useState(0);
+  const [id, setId] = useState(null);
+  const [label, setLabel] = useState(null);
 
-  const handleCameraToggle = () => {
-    setIsCameraOn(!isCameraOn); // Đảo ngược trạng thái camera
+const [taskState, setTaskState] = useState(null);
+useEffect(() => {
+  // Xét giá trị cho flow1 dựa trên giá trị của mixer1Percent
+  if (mixer1Percent > 0) {
+    setFlow1(1);
+  }  else if (mixer1Percent < 0) {
+    setFlow1(-1);
+  }
+  else {
+    setFlow1(0);
+  }
+}, [mixer1Percent]);
 
-    if (!isCameraOn) {
-      navigator.mediaDevices
-        .getUserMedia({ video: true })
-        .then((stream) => {
-          setCameraStream(stream);
-          const videoElement = document.getElementById("liveVideo");
-          if (videoElement) {
-            videoElement.srcObject = stream;
-          }
-        })
-        .catch((error) => {
-          console.error("Lỗi khi truy cập camera:", error);
-        });
-    } else {
-      // Tắt camera
-      cameraStream.getVideoTracks().forEach((track) => track.stop());
-      setCameraStream(null);
-      const videoElement = document.getElementById("liveVideo");
-      if (videoElement) {
-        videoElement.srcObject = null;
+useEffect(() => {
+  // Xét giá trị cho flow2 dựa trên giá trị của mixer2Percent
+  if (mixer2Percent > 0) {
+    setFlow2(1);
+  } else if (mixer2Percent < 0) {
+    setFlow2(-1);
+  }
+  else {
+    setFlow2(0);
+  }
+}, [mixer2Percent]);
+
+useEffect(() => {
+  // Xét giá trị cho flow3 dựa trên giá trị của mixer3Percent
+  if (mixer3Percent > 0) {
+    setFlow3(1);
+  } else if (mixer3Percent < 0) {
+    setFlow3(-1);
+  } else {
+    setFlow3(0);
+  }
+}, [mixer3Percent]);
+
+useEffect(() => {
+  // Xét giá trị cho flow3 dựa trên giá trị của pumpout
+  if (pumpout > 0) {
+    setPump(1);
+  } else if (pumpout < 0) {
+    setPump(-1);
+  } else {
+    setPump(0);
+  }
+}, [pumpout]);
+
+useEffect(() => {
+  const ADAFRUIT_IO_USERNAME = 'GutD';
+  const ADAFRUIT_IO_KEY = 'aio_TNaU20Pmw9L7x41vHH4ifs3ZKSit';
+  const FEED_KEY = 'task';
+
+  const client = mqtt.connect('mqtt://io.adafruit.com', {
+    username: ADAFRUIT_IO_USERNAME,
+    password: ADAFRUIT_IO_KEY
+  });
+
+  client.on('connect', () => {
+    console.log('Connected to Adafruit IO');
+    client.subscribe(`${ADAFRUIT_IO_USERNAME}/feeds/${FEED_KEY}`, (err) => {
+      if (err) {
+        console.error('Failed to subscribe to feed:', err);
+      } else {
+        console.log(`Subscribed to ${FEED_KEY} feed`);
       }
-    }
+    });
+  });
+
+  client.on('message', (topic, message) => {
+      console.log(`New message from ${FEED_KEY} feed: ${message.toString()}`);
+      const data = JSON.parse(message.toString());
+      setCurrentTask(data.current_task || "");
+      setMixer1Percent(data.mixer1_percent || 0);
+      setMixer2Percent(data.mixer2_percent || 0);
+      setMixer3Percent(data.mixer3_percent || 0);
+      setPumpout(data.pumpout || 0);
+      setId(data.id || null);
+      setLabel(data.label || null);
+
+      console.log("Current Task:", data.current_task || "");
+      console.log("Mixer 1 Percent:", data.mixer1_percent || 0);
+      console.log("Mixer 2 Percent:", data.mixer2_percent || 0);
+      console.log("Mixer 3 Percent:", data.mixer3_percent || 0);
+      console.log("Pumpout:", data.pumpout || 0);
+      console.log("ID:", data.id || null);
+      console.log("Label:", data.label || null);
+      console.log("mixxxxx1",flow1)
+  });
+
+  client.on('error', (err) => {
+    console.error('Connection error:', err);
+  });
+
+  return () => {
+    client.end();
   };
-
-  //lựa chọn kênh live------------------------begin-----------------------------
-  const channelOptions = [
-    { value: 1, label: "Kênh 1" },
-    { value: 2, label: "Kênh 2" },
-  ];
-  
-  const [channel, setChannel] = React.useState(1);
-  const [tvChannel,setTvChannel] = useState("");
-  const [tvChannelOption, setTvChannelOption] = useState([]);
-  const [nameTwitch, setNameTwitch] = useState('');
-  const [selectTvChannel, setSelectTvChannel] =  React.useState(1);
+}, []);
 
 
-  const handleChannelChange = (event) => {
-    const newChannel = event.target.value;
-    setChannel(newChannel);
-  };
-
-  // xử lý đổi tvchannel
-const handleTvChannelChange = (event) => {
-  const newIndex = event.target.value; // Lấy index mới được chọn từ dropdown menu
-  setSelectTvChannel(newIndex); // Cập nhật giá trị mới dựa trên index
-  console.log("tvchannel ",  tvChannelOption[selectTvChannel -1].label)
-};
-
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const responseData = await fetch(
-          `${API_BASE_URL}/get/namestream?stream=${channel}`,
-          {
-            headers: {
-              "ngrok-skip-browser-warning": "true",
-            },
-          }
-        );
-        if (!responseData.ok) {
-          throw new Error("Network response video was not ok");
-        }
-  
-        const responseTVChanel = await fetch(
-          `${API_BASE_URL}/get/TVchannel`,
-          {
-            headers: {
-              "ngrok-skip-browser-warning": "true",
-            },
-          }
-        );
-        if (!responseTVChanel.ok) {
-          throw new Error("Network response video was not ok");
-        }
-        const responseDataTVChanel = await responseTVChanel.json();
-        const response = await responseData.json();
-        setNameTwitch(response["name twitch"])
-        setTvChannel(responseDataTVChanel["TV channel"])
-  
-        const formattedChannels = responseDataTVChanel["TV channel"].replace(/[\[\]']+/g, '').split(', ');
-        const options = formattedChannels.map((channel, index) => ({
-          value: index + 1,
-          label: `${channel}`
-        }));
-        setTvChannelOption(options);
-  
-        // Xử lý dữ liệu responseVideo ở đây
-      } catch (error) {
-        console.error("Error fetching video schedule:", error);
-      }
-    };
-  
-    fetchData(); // Gọi hàm fetchData khi giá trị của channel thay đổi
-  }, [channel]);
-  
-  
-
-
-  //lựa chọn kênh live-------------------end-----------------------------------
-  const [liveLink, setLiveLink] = useState(null);
-  const onChangeLink = (newValue) => {
-    setLiveLink(newValue);
-}
-const handleClickLive= async () => {
-  const url = `${API_BASE_URL}//live?stream=${channel}&link=${liveLink}`;
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "ngrok-skip-browser-warning": "true",
-      },
-      // body: JSON.stringify(payload) // Nếu cần gửi dữ liệu cụ thể, hãy thêm vào đây
-    });
-
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-
-    const data = await response.json();
-    console.log("Response data:", data);
-  } catch (error) {
-    console.error("Error:", error);
-  }
-}
-const handleClickStop= async () => {
-  const url = `${API_BASE_URL}//stoplive?stream=${channel}`;
-  console.log(url)
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "ngrok-skip-browser-warning": "true",
-      },
-      // body: JSON.stringify(payload) // Nếu cần gửi dữ liệu cụ thể, hãy thêm vào đây
-    });
-
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-
-    const data = await response.json();
-    console.log("Response data:", data);
-  } catch (error) {
-    console.error("Error:", error);
-  }
-}
-// live bằng kênh truyền hình có sẵn-----------------------------begin----------------------------------------
-const handleClickLiveTvChannel= async () => {
-  const url = `${API_BASE_URL}//live/TVchannel?stream=${channel}&tvchannel=${tvChannelOption[selectTvChannel -1].label}`;
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "ngrok-skip-browser-warning": "true",
-      },
-      // body: JSON.stringify(payload) // Nếu cần gửi dữ liệu cụ thể, hãy thêm vào đây
-    });
-
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-
-    const data = await response.json();
-    console.log("Response data:", data);
-  } catch (error) {
-    console.error("Error:", error);
-  }
-}
-const handleClickStopTvChannel= async () => {
-  const url = `${API_BASE_URL}//stoplive?stream=${channel}`;
-  console.log(url)
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "ngrok-skip-browser-warning": "true",
-      },
-      // body: JSON.stringify(payload) // Nếu cần gửi dữ liệu cụ thể, hãy thêm vào đây
-    });
-
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-
-    const data = await response.json();
-    console.log("Response data:", data);
-  } catch (error) {
-    console.error("Error:", error);
-  }
-}
   return (
     <Box m="20px">
-      <Header title="Live Stream" subtitle="Welcome to Live Stream" />
+      <Header title="Theo dõi hệ thống" subtitle="Giao diện theo dõi lịch tưới gần nhất" />
       <Box
         display="grid"
-        gridTemplateColumns="70% 30%"
+        gridTemplateColumns="72% 28%"
         gap="20px"
         alignItems="start"
       >
         <Box //phần live
           backgroundColor={colors.primary[400]}
           borderRadius="10px"
-          padding="10px"
-          height="500px"
+          padding="5px"
+          height="auto"
           display="flex"
           flexDirection="column"
-          justifyContent="center" // căn video theo chiều dọc
-          alignItems="center" // căn video theo chiều ngang
+          // justifyContent="center" // căn video theo chiều dọc
+          // alignItems="center" // căn video theo chiều ngang
           style={{ overflow: "hidden", position: "relative" }}
         >
-          {/* <video
-            id="liveVideo"
-            autoPlay
-            style={{
-              maxWidth: "100%",
-              maxHeight: "100%",
-              width: "auto",
-              height: "auto",
-              objectFit: "contain",
-            }}
-          ></video> */}
+            <Box display="flex">
+            {/* Box thông tin task-----------------------end-------------------------- */}
+            <Box backgroundColor = {colors.white[100]} borderRadius="10px" padding="10px" style={{ width: '570px', height: 'auto' }} marginBottom="10px">
+            <Box marginBottom="10px" display="flex" alignItems="center">
+              <InfoIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
+              <Typography variant="h4" marginRight="10px" paddingLeft="10px">
+                <strong>Tên lịch tưới</strong>
+              </Typography>
+              <TextField
+                label="Tên của lịch tưới"
+                variant="outlined"
+                sx={{ width: "300px" }}
+              />
+            </Box>
+            <Box
+            marginBottom="10px"
+            display="flex"
+            alignItems="center"
+          >
+            <ChangeCircleIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Khu vực tưới</strong>
+            </Typography>
+            <Autocomplete
+              sx={{ width: 300 }}
+              multiple
+              id="list-pole-autocomplete"
+              // onChange={(event, newValue) => {
+              //   setSelectedOptions(newValue);
+              //   onChangeContentDaily(newValue, boxDailyIdCounter.toString());
+              // }}
+              options={hardcodedOptions}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="outlined"
+                  label="Khu vực"
+                />
+              )}
+            />
+            </Box>
+                      <Box display="flex" alignItems="center" marginBottom="10px">
+            <TextField
+              label="Thời gian bắt đầu"
+              // onChange={(newTime) => {
+              //   const hours = newTime.$d.getHours().toString().padStart(2, "0");
+              //   const minutes = newTime.$d
+              //     .getMinutes()
+              //     .toString()
+              //     .padStart(2, "0");
+              //   const formattedTime = `${hours}:${minutes}`;
+              //   console.log("Giá trị mới: ", formattedTime);
+              //   onChangeTimeStartDaily(
+              //     formattedTime,
+              //     boxDailyIdCounter.toString(),
+              //   );
+              // }}
+            />
+            <span
+              style={{
+                fontSize: "1.5em",
+                margin: "0 10px",
+              }}
+            >
+              -
+            </span>
+            <TextField
+              label="Thời gian kết thúc"
+              // onChange={(newTime) => {
+              //   const hours = newTime.$d.getHours().toString().padStart(2, "0");
+              //   const minutes = newTime.$d
+              //     .getMinutes()
+              //     .toString()
+              //     .padStart(2, "0");
+              //   const formattedTime = `${hours}:${minutes}`;
+              //   console.log("Giá trị mới: ", formattedTime);
+              //   onChangeTimeEndDaily(
+              //     formattedTime,
+              //     boxDailyIdCounter.toString(),
+              //   );
+              // }}
+            />
+          </Box>
 
-          <iframe
-    src={`https://player.twitch.tv/?channel=${nameTwitch}&parent=localhost`}
-    height="100%"
-    width="100%"
-    allowfullscreen>
-</iframe>
+          <Box
+            marginBottom="10px"
+            display="flex"
+            alignItems="center"
+          >
+            <WaterIcon sx={{ color: "#4cceac", fontSize: "36px" }} />
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Flow 1</strong>
+            </Typography>
+            <TextField
+              label="ml"
+              variant="outlined"
+              sx={{ width: "60px"}}
+              // onChange={(event) => {
+              //   const newValue = event.target.value;
+              //   onChangeFlow1Daily(newValue, boxDailyIdCounter);
+              // }}
+            />
+
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Flow 2</strong>
+            </Typography>
+            <TextField
+              label="ml"
+              variant="outlined"
+              sx={{ width: "60px" }}
+              // onChange={(event) => {
+              //   const newValue = event.target.value;
+              //   onChangeFlow2Daily(newValue, boxDailyIdCounter);
+              // }}
+            />
+
+            
+            <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+              <strong>Flow 3</strong>
+            </Typography>
+            <TextField
+              label="ml"
+              variant="outlined"
+              sx={{ width: "60px" }}
+              // onChange={(event) => {
+              //   const newValue = event.target.value;
+              //   onChangeFlow3Daily(newValue, boxDailyIdCounter);
+              // }}
+            /> 
+
+          </Box>
+          </Box>
+          {/* Box thông tin task-----------------------end-------------------------- */}
+          <Box backgroundColor = {colors.white[100]} borderRadius="10px" padding="10px" style={{ width: '400px', height: 'auto' }} marginBottom="10px" marginLeft="10px" flexDirection="column">
+
+          <Box padding="20px" backgroundColor = "#4cceac" borderRadius="20px" alignItems="center" marginTop="5px">
+
+          <Typography variant="h1" sx={{ color: 'white' }} marginLeft="70px">{ctime}</Typography>
+          </Box>
+
+          <Box 
+            padding="10px" 
+            borderRadius="20px" 
+            alignItems="center" 
+            display="flex"
+        >
+            <Box 
+                backgroundColor="#4cceac" 
+                borderRadius="20px" 
+                alignItems="center" 
+                marginTop="5px"
+                flex="1"
+                
+                justifyContent="center"
+                marginRight="10px"
+            >         
+
+                      <Box 
+                          backgroundColor="#4cceac" 
+                          borderRadius="20px" 
+                          marginTop="5px"
+                          display="flex"
+                          justifyContent="center"
+                          alignItems="center"
+                      >  
+                      <ThermostatIcon style={{ fontSize: "32px", color: "white" }} />
+                      <Typography variant="h2" sx={{ color: 'white' }}>
+                              Nhiệt độ
+                          </Typography>
+                      </Box>
+
+                      <Box 
+                          backgroundColor="#4cceac" 
+                          borderRadius="20px" 
+                          marginTop="5px"
+                          display="flex"
+                          justifyContent="center"
+                          alignItems="center"
+                          height="80px"
+                      >  
+                          <Typography variant="h1" sx={{ color: 'white' }}>
+                              30℃
+                          </Typography>
+                      </Box>
+            </Box>
+
+            <Box 
+                backgroundColor="#4cceac" 
+                borderRadius="20px" 
+                alignItems="center" 
+                marginTop="5px"
+                flex="1"
+                justifyContent="center"
+            >
+            
+            <Box 
+                          backgroundColor="#4cceac" 
+                          borderRadius="20px" 
+                          marginTop="5px"
+                          display="flex"
+                          justifyContent="center"
+                          alignItems="center"
+                      >  
+                      <PercentIcon style={{ fontSize: "32px", color: "white" }} />
+                      <Typography variant="h2" sx={{ color: 'white' }}>
+                              Độ ẩm
+                          </Typography>
+                      </Box>
+
+                      <Box 
+                          backgroundColor="#4cceac" 
+                          borderRadius="20px" 
+                          marginTop="5px"
+                          display="flex"
+                          justifyContent="center"
+                          alignItems="center"
+                          height="80px"
+                      >  
+                          <Typography variant="h1" sx={{ color: 'white' }}>
+                              30%
+                          </Typography>
+                      </Box>
+            </Box>
+
+        </Box>
+
+          </Box>
+
+          </Box>
+{/*---------------------------------------------------------------------------------------------------------------------------------------------*/ }
+          <Box display="flex" backgroundColor = {colors.white[100]} borderRadius="10px" padding="10px" style={{ width: 'auto', height: 'auto' }}>
+         {/* tiến trình begin */}
+          <Box 
+          borderRadius="10px"
+          padding="10px"
+          height="auto"
+          display="flex"
+          flexDirection="column"
+          style={{ opacity: flow1 === 1 ? 1 : 0.2 }}
+        >
+        <Box display="flex" marginLeft="23px" marginBottom="5px">
+        <Filter1Icon sx={{ color: "#4cceac", fontSize: "24px" }} />
+              <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+                <strong>Trộn thùng 1</strong>
+              </Typography>
+        </Box>
+
+        <LiquidGauge percentage={mixer1Percent > 0 ? mixer1Percent : 0} width={190} height={190} />
+        </Box>
+
+        {flow2 !== 0 ? (
+                <ArrowCircleRightIcon sx={{ color: "#4cceac", fontSize: "36px", marginTop: 'auto', marginBottom: 'auto' }} />
+            ) : (
+                <DoNotDisturbOnIcon sx={{ color: "#ff0000", fontSize: "36px", marginTop: 'auto', marginBottom: 'auto' }} />
+            )}
+
+        <Box 
+          borderRadius="10px"
+          padding="10px"
+          height="auto"
+          display="flex"
+          flexDirection="column"
+          style={{ opacity: flow2 === 1 ? 1 : 0.2 }}
+        >
+
+                <Box display="flex" marginLeft="23px" marginBottom="5px">
+        <Filter2Icon sx={{ color: "#4cceac", fontSize: "24px" }} />
+              <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+                <strong>Trộn thùng 2</strong>
+              </Typography>
+        </Box>
+
+        <LiquidGauge percentage={mixer2Percent > 0 ? mixer2Percent : 0} width={190} height={190} />
+        </Box>
+        
+        {flow3 !== 0 ? (
+                <ArrowCircleRightIcon sx={{ color: "#4cceac", fontSize: "36px", marginTop: 'auto', marginBottom: 'auto' }} />
+            ) : (
+                <DoNotDisturbOnIcon sx={{ color: "#ff0000", fontSize: "36px", marginTop: 'auto', marginBottom: 'auto' }} />
+            )}
+
+        <Box 
+          borderRadius="10px"
+          padding="10px"
+          height="auto"
+          display="flex"
+          flexDirection="column"
+          style={{ opacity: flow3 === 1 ? 1 : 0.2 }}
+        >
+
+<Box display="flex" marginLeft="23px" marginBottom="5px">
+        <Filter3Icon sx={{ color: "#4cceac", fontSize: "24px" }} />
+              <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+                <strong>Trộn thùng 3</strong>
+              </Typography>
+        </Box>
+
+        <LiquidGauge percentage={mixer3Percent > 0 ? mixer3Percent : 0} width={190} height={190} />
+        </Box>
+
+                
+        {pump !== 0 ? (
+                <ArrowCircleRightIcon sx={{ color: "#4cceac", fontSize: "36px", marginTop: 'auto', marginBottom: 'auto' }} />
+            ) : (
+                <DoNotDisturbOnIcon sx={{ color: "#ff0000", fontSize: "36px", marginTop: 'auto', marginBottom: 'auto' }} />
+            )}
+
+        <Box 
+          borderRadius="10px"
+          padding="10px"
+          height="auto"
+          display="flex"
+          flexDirection="column"
+          style={{ opacity: pump === 1 ? 1 : 0.2 }}
+        >
+
+<Box display="flex" marginLeft="23px" marginBottom="5px">
+        <Filter4Icon sx={{ color: "#4cceac", fontSize: "24px" }} />
+              <Typography variant="h5" marginRight="10px" paddingLeft="10px">
+                <strong>Tưới khu vực</strong>
+              </Typography>
+        </Box>
+
+        <LiquidGauge percentage={pumpout > 0 ? pumpout : 0} width={190} height={190} />
+        </Box>
+
+        {/* tiến trình end */}
+          </Box>
         </Box>
 
         <Box // phần chọn smart pole
           backgroundColor={colors.primary[400]}
           borderRadius="10px"
-          padding="20px"
+          padding="5px"
           height="auto"
         >
-          <Box
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginBottom: "20px",
-            }}
-          >
-          <SubscriptionsIcon/>
-            <Typography
-              variant="h4"
-              style={{ marginRight: "10px", paddingLeft: "10px" }}
-            >
-              <strong>Danh sách các kênh chiếu</strong>
-            </Typography>
-          </Box>
-
-          <Box width="300px" marginBottom="20px">
-            <TextField
-              select
-              label="Kênh"
-              value={channel}
-              onChange={handleChannelChange}
-              variant="outlined"
-              fullWidth
-            >
-              {channelOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  <Box display="flex" alignItems="center">
-                    {" "}
-                    {/* Sử dụng Flexbox để căn chỉnh các phần tử ngang nhau */}
-                    <SubscriptionsIcon sx={{ marginRight: 1 }} />{" "}
-                    {/* Icon Subscriptions */}
-                    {option.label}
-                  </Box>
-                </MenuItem>
-              ))}
-            </TextField>
-          </Box>
-        {/* phần live stream bằng link------------begin--------------------------------------- */}
-          <Box
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginBottom: "20px",
-            }}
-          >
-          <AddLinkIcon />
-            <Typography
-              variant="h4"
-              style={{ marginRight: "10px", paddingLeft: "10px" }}
-            >
-              <strong>LiveStream bằng link</strong>
-            </Typography>
-          </Box>
-          <Box display="flex" alignItems="center" gap={2} marginBottom="20px">
-  <TextField
-    label="Đường link"
-    variant="outlined"
-    sx={{ flex: 1 }}
-    onChange={(event) => {
-      const newValue = event.target.value;
-      onChangeLink(newValue);
-    }}
-  />
-  <Button
-    variant="outlined"
-    onClick={handleClickLive}
-    sx={{
-      color: "#007FFF",
-      borderColor: "#007FFF",
-      backgroundColor: "#FFFFFF",
-      fontSize: "1.2rem",
-      fontWeight: "bold",
-      padding: "15px 20px",
-      borderRadius: "10px",
-      "&:hover": {
-        backgroundColor: "#007FFF",
-        color: "#FFFFFF",
-      },
-    }}
-  >
-    Live
-  </Button>
-
-  <Button
-  variant="outlined"
-  onClick={handleClickStop}
-  sx={{
-    color: "#FF0000", // Đổi màu chữ thành đỏ
-    borderColor: "#FF0000", // Đổi màu viền thành đỏ
-    backgroundColor: "#FFFFFF",
-    fontSize: "1.2rem",
-    fontWeight: "bold",
-    padding: "15px 20px",
-    borderRadius: "10px",
-    "&:hover": {
-      backgroundColor: "#FF0000", // Màu nền khi hover là màu đỏ
-      color: "#FFFFFF", // Màu chữ là màu trắng khi hover
-    },
-  }}
->
-  Stop
-</Button>
-
-</Box>
-
-      {/* phần live stream bằng link------------end--------------------------------------- */}
-      
-
-      {/* phần live stream bằng kênh có sẵn------------begin--------------------------------------- */}
-      <Box
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginBottom: "20px",
-            }}
-          >
-          <DvrIcon />
-            <Typography
-              variant="h4"
-              style={{ marginRight: "10px", paddingLeft: "10px" }}
-            >
-              <strong>LiveStream từ Đài truyền hình có sẵn</strong>
-            </Typography>
-          </Box>
-          <Box display="flex" alignItems="center" gap={2} marginBottom="20px">
-          <Box variant="outlined"
-    sx={{ flex: 1 }}>
-            <TextField
-              select
-              label="Đài truyền hình"
-              value={selectTvChannel}
-              onChange={handleTvChannelChange}
-              variant="outlined"
-              fullWidth
-            >
-              {tvChannelOption.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  <Box display="flex" alignItems="center">
-                    {" "}
-                    {/* Sử dụng Flexbox để căn chỉnh các phần tử ngang nhau */}
-                    <DvrIcon sx={{ marginRight: 1 }} />{" "}
-                    {/* Icon Subscriptions */}
-                    {option.label}
-                  </Box>
-                </MenuItem>
-              ))}
-            </TextField>
-          </Box>
-  <Button
-    variant="outlined"
-    onClick={handleClickLiveTvChannel}
-    sx={{
-      color: "#007FFF",
-      borderColor: "#007FFF",
-      backgroundColor: "#FFFFFF",
-      fontSize: "1.2rem",
-      fontWeight: "bold",
-      padding: "15px 20px",
-      borderRadius: "10px",
-      "&:hover": {
-        backgroundColor: "#007FFF",
-        color: "#FFFFFF",
-      },
-    }}
-  >
-    Live
-  </Button>
-
-  <Button
-  variant="outlined"
-  onClick={handleClickStopTvChannel}
-  sx={{
-    color: "#FF0000", // Đổi màu chữ thành đỏ
-    borderColor: "#FF0000", // Đổi màu viền thành đỏ
-    backgroundColor: "#FFFFFF",
-    fontSize: "1.2rem",
-    fontWeight: "bold",
-    padding: "15px 20px",
-    borderRadius: "10px",
-    "&:hover": {
-      backgroundColor: "#FF0000", // Màu nền khi hover là màu đỏ
-      color: "#FFFFFF", // Màu chữ là màu trắng khi hover
-    },
-  }}
->
-  Stop
-</Button>
-
-</Box>
-
-      {/* phần live stream bằng kênh có sẵn------------end--------------------------------------- */}
-
-      {/* phần live stream bằng camera------------begin--------------------------------------- */}
-          <Box
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginBottom: "20px",
-            }}
-          >
-          <SettingsInputAntennaIcon />
-            <Typography
-              variant="h4"
-              style={{ marginRight: "10px", paddingLeft: "10px" }}
-            >
-              <strong>LiveStream trực tiếp</strong>
-            </Typography>
-          </Box>
-
-
-          <Box display="flex" alignItems="center" marginLeft="50px">
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: isMicOn ? "#007FFF" : "#757575",
-                color: "#fff",
-                marginLeft: "20px",
-                display: "flex",
-                alignItems: "center",
-                padding: "5px",
-              }}
-              onClick={handleMicToggle}
-            >
-              {isMicOn ? (
-                <MicIcon fontSize="large" />
-              ) : (
-                <MicOffIcon fontSize="large" />
-              )}
-            </Button>
-
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: isCameraOn ? "#007FFF" : "#757575",
-                color: "#fff",
-                marginLeft: "20px",
-                display: "flex",
-                alignItems: "center",
-                padding: "5px",
-              }}
-              onClick={handleCameraToggle}
-            >
-              {isCameraOn ? (
-                <VideocamIcon fontSize="large" />
-              ) : (
-                <VideocamOffIcon fontSize="large" />
-              )}
-            </Button>
-
-            <Button
-              variant="contained"
-              sx={{
-                backgroundColor: "#FF0000",
-                color: "#fff",
-                marginLeft: "20px",
-                display: "flex",
-                alignItems: "center",
-                padding: "5px",
+        <Box display="flex" alignItems="center">
+            <EventNoteIcon style={{ fontSize: "32px", color: "#4cceac" }} />
+            <h2
+              style={{
+                marginLeft: "10px",
+                fontSize: "24px",
+                fontWeight: "bold",
               }}
             >
-              <PhoneDisabledIcon fontSize="large" />
-            </Button>
+              Nhật ký hệ thống
+            </h2>
           </Box>
-
-          <Box display="flex" alignItems="center" marginLeft="50px">
-            <Button
-              variant="outlined"
-              sx={{
-                color: "#007FFF", // Màu chữ là màu xanh lấp biển
-                borderColor: "#007FFF", // Màu viền là màu xanh lấp biển
-                backgroundColor: "#FFFFFF", // Màu nền là màu trắng
-                marginTop: "20px",
-                marginLeft: "60px",
-                fontSize: "1.2rem", // kích thước chữ
-                fontWeight: "bold", // in đậm chữ
-                padding: "15px 20px", // padding để tạo button lớn hơn
-                borderRadius: "10px", // bo tròn góc
-                "&:hover": {
-                  // thêm hiệu ứng hover khi di chuột qua button
-                  backgroundColor: "#007FFF", // Màu nền khi hover là màu xanh lấp biển
-                  color: "#FFFFFF", // Màu chữ là màu trắng khi hover
-                },
-              }}
-            >
-              Go Live Here!
-            </Button>
+          
+          <Box backgroundColor = {colors.white[100]} borderRadius="10px" padding="10px" style={{ width: 'auto', height: 'auto' }}>
+          <Box display="flex" alignItems="center">
+          <h4>10:30 AM:</h4> Bắt đầu trộn thùng 1 
           </Box>
-           {/* phần live stream bằng camera------------begin--------------------------------------- */}
+          <Box display="flex" alignItems="center">
+          <h4>10:31 AM:</h4> Hoàn thành trộn thùng 1 
+          </Box>
+          </Box>
 
         </Box>
       </Box>
