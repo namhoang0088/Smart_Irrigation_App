@@ -1587,7 +1587,7 @@ export default function AddEvent({ open, handleClose, channelStream }) {
             }}
             endIcon={<DeleteForeverIcon />}
           >
-            Xóa quảng cáo
+            Xóa lịch tưới
           </Button>
           <Button
             autoFocus
