@@ -1544,7 +1544,7 @@ export default function AddEvent({ open, handleClose, channelStream }) {
                         marginRight="10px"
                         paddingLeft="10px"
                       >
-                        <strong>Lịch chiếu linh hoạt</strong>
+                        <strong>Lịch tưới linh hoạt</strong>
                       </Typography>
                     </ListItemIcon>
                     {openFlex ? <ExpandLess /> : <ExpandMore />}

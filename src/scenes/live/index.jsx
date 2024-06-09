@@ -11,6 +11,7 @@ import {
   TextField,
   Autocomplete,
   TimePicker,
+  Toolbar
 } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import Header from "../../components/Header";
@@ -106,7 +107,7 @@ useEffect(() => {
 
 useEffect(() => {
   const ADAFRUIT_IO_USERNAME = 'GutD';
-  const ADAFRUIT_IO_KEY = 'aio_TNaU20Pmw9L7x41vHH4ifs3ZKSit';
+  const ADAFRUIT_IO_KEY = 'aio_rDDB287G6iKSbzgsj6NlbC0uirJk';
   const FEED_KEY = 'task';
 
   const client = mqtt.connect('mqtt://io.adafruit.com', {
@@ -155,6 +156,72 @@ useEffect(() => {
   };
 }, []);
 
+const [defaultStart, setDefaultStart] = useState("");
+const [defaultEnd, setDefaultEnd] = useState("");
+const [defaultLabel, setDefaultLabel] = useState("");
+const [defaultMixer, setDefaultMixer] = useState([0, 0, 0]);
+const [defaultArea, setDefaultArea] = useState([]);
+
+useEffect(() => {
+  const fetchData = async () => { 
+    try {
+      const responseVideo = await fetch(
+        `${API_BASE_URL}/get/currentTask`,
+        {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        },
+      );
+      if (!responseVideo.ok) {
+        throw new Error("Network response video was not ok");
+      }
+      const responseData = await responseVideo.json();
+      setDefaultStart(responseData["Current Task"].start_time || "");
+      setDefaultEnd(responseData["Current Task"].end_time || "");
+      setDefaultLabel(responseData["Current Task"].label || "");
+      setDefaultMixer(responseData["Current Task"].mixer || [0, 0, 0]);
+      setDefaultArea(responseData["Current Task"].area || []);
+      // console.log("Labelllll:",defaultLabel);
+      // console.log("Mixerrrrr:", defaultMixer);
+      // console.log("Areaaaaa:", defaultArea);
+      // console.log("responeeeeeeeeeeeee", responseData)
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  fetchData(); // Gọi hàm fetchData khi giá trị của channel thay đổi
+  const intervalId = setInterval(fetchData, 10000); // Gọi lại fetchData mỗi 10 giây
+  return () => clearInterval(intervalId); // Hủy interval khi component unmount
+}, [defaultLabel ]);
+
+const [logData, setLogData] = useState([]);
+useEffect(() => {
+const ADAFRUIT_IO_USERNAME = 'GutD';
+const ADAFRUIT_IO_KEY = 'aio_rDDB287G6iKSbzgsj6NlbC0uirJk';
+const FEED_NAME = 'log';
+  const fetchData = async () => {
+    try {
+      const response = await fetch(`https://io.adafruit.com/api/v2/${ADAFRUIT_IO_USERNAME}/feeds/${FEED_NAME}/data?limit=20`, {
+        headers: {
+          'X-AIO-Key': ADAFRUIT_IO_KEY
+        }
+      });
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data = await response.json();
+      // Lưu 20 dòng gần nhất vào state
+      setLogData(data);
+      console.log("logggggggggggggggggggggg", logData)
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  fetchData();
+}, [logData]);
 
   return (
     <Box m="20px">
@@ -185,9 +252,11 @@ useEffect(() => {
                 <strong>Tên lịch tưới</strong>
               </Typography>
               <TextField
-                label="Tên của lịch tưới"
+                label = "Tên lịch tưới"
                 variant="outlined"
                 sx={{ width: "300px" }}
+                value={defaultLabel}
+                disabled
               />
             </Box>
             <Box
@@ -200,6 +269,7 @@ useEffect(() => {
               <strong>Khu vực tưới</strong>
             </Typography>
             <Autocomplete
+            disabled
               sx={{ width: 300 }}
               multiple
               id="list-pole-autocomplete"
@@ -208,6 +278,7 @@ useEffect(() => {
               //   onChangeContentDaily(newValue, boxDailyIdCounter.toString());
               // }}
               options={hardcodedOptions}
+              value={defaultArea}
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -220,6 +291,8 @@ useEffect(() => {
                       <Box display="flex" alignItems="center" marginBottom="10px">
             <TextField
               label="Thời gian bắt đầu"
+              disabled
+              value = {defaultStart}
               // onChange={(newTime) => {
               //   const hours = newTime.$d.getHours().toString().padStart(2, "0");
               //   const minutes = newTime.$d
@@ -244,6 +317,8 @@ useEffect(() => {
             </span>
             <TextField
               label="Thời gian kết thúc"
+              disabled
+              value = {defaultEnd}
               // onChange={(newTime) => {
               //   const hours = newTime.$d.getHours().toString().padStart(2, "0");
               //   const minutes = newTime.$d
@@ -270,9 +345,11 @@ useEffect(() => {
               <strong>Flow 1</strong>
             </Typography>
             <TextField
+            disabled
               label="ml"
               variant="outlined"
               sx={{ width: "60px"}}
+              value = {defaultMixer[0]}
               // onChange={(event) => {
               //   const newValue = event.target.value;
               //   onChangeFlow1Daily(newValue, boxDailyIdCounter);
@@ -283,7 +360,9 @@ useEffect(() => {
               <strong>Flow 2</strong>
             </Typography>
             <TextField
+            disabled
               label="ml"
+              value = {defaultMixer[1]}
               variant="outlined"
               sx={{ width: "60px" }}
               // onChange={(event) => {
@@ -297,8 +376,10 @@ useEffect(() => {
               <strong>Flow 3</strong>
             </Typography>
             <TextField
+            disabled
               label="ml"
               variant="outlined"
+              value = {defaultMixer[2]}
               sx={{ width: "60px" }}
               // onChange={(event) => {
               //   const newValue = event.target.value;
@@ -510,7 +591,7 @@ useEffect(() => {
           backgroundColor={colors.primary[400]}
           borderRadius="10px"
           padding="5px"
-          height="auto"
+          height="550px"
         >
         <Box display="flex" alignItems="center">
             <EventNoteIcon style={{ fontSize: "32px", color: "#4cceac" }} />
@@ -524,15 +605,19 @@ useEffect(() => {
               Nhật ký hệ thống
             </h2>
           </Box>
-          
-          <Box backgroundColor = {colors.white[100]} borderRadius="10px" padding="10px" style={{ width: 'auto', height: 'auto' }}>
-          <Box display="flex" alignItems="center">
-          <h4>10:30 AM:</h4> Bắt đầu trộn thùng 1 
-          </Box>
-          <Box display="flex" alignItems="center">
-          <h4>10:31 AM:</h4> Hoàn thành trộn thùng 1 
-          </Box>
-          </Box>
+
+          <Box backgroundColor={colors.white[100]} borderRadius="10px" padding="10px" style={{ width: 'auto', height: '450px', overflowY: 'auto' }}>
+    {logData.map((item, index) => {
+        const logValue = JSON.parse(item.value); // Chuyển đổi chuỗi JSON thành đối tượng JavaScript
+        return (
+            <Box key={index} display="flex" flexDirection="column" marginBottom="8px">
+                <Typography variant="h4">{logValue.time}:</Typography>
+                <Typography>{logValue.mess}</Typography>
+            </Box>
+        );
+    })}
+</Box>
+
 
         </Box>
       </Box>

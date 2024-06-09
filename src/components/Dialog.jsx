@@ -1712,7 +1712,7 @@ export default function CustomDialog({
                 </Box>
                 {/* lặp lại tuần ------------end---------------*/}
 
-                {/* lịch chiếu linh hoạt ------------begin---------------*/}
+                {/* lịch tưới linh hoạt ------------begin---------------*/}
                 <Box
                   marginBottom="20px"
                   flexDirection="column"
