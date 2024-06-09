@@ -106,8 +106,8 @@ useEffect(() => {
 }, [pumpout]);
 
 useEffect(() => {
-  const ADAFRUIT_IO_USERNAME = 'GutD';
-  const ADAFRUIT_IO_KEY = 'aio_rDDB287G6iKSbzgsj6NlbC0uirJk';
+  const ADAFRUIT_IO_USERNAME = '';
+  const ADAFRUIT_IO_KEY = '';
   const FEED_KEY = 'task';
 
   const client = mqtt.connect('mqtt://io.adafruit.com', {
@@ -198,8 +198,8 @@ useEffect(() => {
 
 const [logData, setLogData] = useState([]);
 useEffect(() => {
-const ADAFRUIT_IO_USERNAME = 'GutD';
-const ADAFRUIT_IO_KEY = 'aio_rDDB287G6iKSbzgsj6NlbC0uirJk';
+const ADAFRUIT_IO_USERNAME = '';
+const ADAFRUIT_IO_KEY = '';
 const FEED_NAME = 'log';
   const fetchData = async () => {
     try {
